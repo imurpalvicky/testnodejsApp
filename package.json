@@ -1,0 +1,20 @@
+{
+  "name": "testnodejsapp",
+  "version": "1.0.0",
+  "description": "test my nodejs app",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test",
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/imurpalvicky/testnodejsApp.git"
+  },
+  "author": "imurpalvicky",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/imurpalvicky/testnodejsApp/issues"
+  },
+  "homepage": "https://github.com/imurpalvicky/testnodejsApp#readme"
+}
