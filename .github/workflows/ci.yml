@@ -2,12 +2,12 @@ name: buildworkflow
 on: pull_request
 jobs:
   build:
-    runs-on: ububtu-latest
+    runs-on: "ubuntu-20.04"
     strategy:
       matrix:
         node-version: [14.x]
-  steps:
-      - name: checkout
+    steps:
+      - name: "checkout"
         uses: actions/checkout@v2
       - name: Set up Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v2
