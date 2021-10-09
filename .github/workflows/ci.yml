@@ -2,7 +2,7 @@ name: buildworkflow
 on: pull_request
 jobs:
   build:
-    runs-on: "ubuntu-20.04"
+    runs-on: "self-hosted"
     strategy:
       matrix:
         node-version: [14.x]
@@ -15,3 +15,6 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - name: Install dependencies
         run: npm install
+      - name: Run trufflhog
+        run: | 
+          truffleHog --regex --entropy=False  https://imurpalvicky:${{secrets.GIT_SECRET_TOKEN}}@github.com/imurpalvicky/testnodejsApp > output.json
