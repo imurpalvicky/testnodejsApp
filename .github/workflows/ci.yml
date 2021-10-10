@@ -18,10 +18,6 @@ jobs:
       - name: Run trufflhog
         run: | 
           C:\Users\sanka\AppData\Roaming\Python\Python310\site-packages\truffleHog\truffleHog.py --json --regex --entropy=False  https://imurpalvicky:${{secrets.GIT_SECRET_TOKEN}}@github.com/imurpalvicky/testnodejsApp
-          Get-Content output.json -Raw 
-          $content = Get-Content output.json -Raw 
-          echo this is the $content
-          # end of optional handling for multi line json
         id: trufflerun
       - name: ReadTrufflerunFile
         id: setTruffleOutput
