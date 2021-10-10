@@ -17,4 +17,24 @@ jobs:
         run: npm install
       - name: Run trufflhog
         run: | 
-          truffleHog --regex --entropy=False  https://imurpalvicky:${{secrets.GIT_SECRET_TOKEN}}@github.com/imurpalvicky/testnodejsApp > output.json
+          C:\Users\sanka\AppData\Roaming\Python\Python310\site-packages\truffleHog\truffleHog.py --json --regex --entropy=False  https://imurpalvicky:${{secrets.GIT_SECRET_TOKEN}}@github.com/imurpalvicky/testnodejsApp
+        id: trufflerun
+      - name: ReadTrufflerunFile
+        id: setTruffleOutput
+        run: |
+          echo testingecho
+          Get-Content output.json -Raw 
+          $content = Get-Content output.json -Raw 
+          echo this is the $content
+          # end of optional handling for multi line json
+          echo "::set-output name=trufflescanresult::$content"
+        shell: powershell
+      - name: create checks
+        uses: LouisBrunner/checks-action@v1.1.1
+        if: always()
+        with:
+          token: ${{ secrets.GIT_SECRET_TOKEN }}
+          name: Test XYZ
+          conclusion: ${{ job.status }}
+          output: |
+            {"summary":${{ steps.ReadTrufflerunFile.outputs.trufflescanresult }}}
