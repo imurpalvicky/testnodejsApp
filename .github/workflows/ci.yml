@@ -22,7 +22,7 @@ jobs:
       - name: ReadTrufflerunFile
         id: setTruffleOutput
         run: |
-  
+          Get-Content output.json -Raw 
           $content = Get-Content output.json -Raw 
           echo $content
           # end of optional handling for multi line json
