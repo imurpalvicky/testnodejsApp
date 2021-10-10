@@ -22,6 +22,7 @@ jobs:
       - name: ReadTrufflerunFile
         id: setTruffleOutput
         run: |
+          echo testingecho
           Get-Content output.json -Raw 
           $content = Get-Content output.json -Raw 
           echo $content
