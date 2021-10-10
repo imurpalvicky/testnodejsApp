@@ -22,7 +22,9 @@ jobs:
       - name: ReadTrufflerunFile
         id: setTruffleOutput
         run: |
+  
           $content = Get-Content output.json -Raw 
+          echo $content
           # end of optional handling for multi line json
           echo "::set-output name=trufflescanresult::$content"
 #        shell: cmd
