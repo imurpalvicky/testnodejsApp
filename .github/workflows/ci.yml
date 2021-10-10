@@ -19,6 +19,12 @@ jobs:
         run: | 
           C:\Users\sanka\AppData\Roaming\Python\Python310\site-packages\truffleHog\truffleHog.py --json --regex --entropy=False  https://imurpalvicky:${{secrets.GIT_SECRET_TOKEN}}@github.com/imurpalvicky/testnodejsApp > output.json
         id: trufflerun
+      - name: ReadTrufflerunFile
+        id: setTruffleOutput
+        run: |
+          content='cat output.json'
+          # end of optional handling for multi line json
+          echo "::set-output name=trufflescanresult::$content"
       - name: create checks
         uses: LouisBrunner/checks-action@v1.1.1
         if: always()
@@ -27,4 +33,4 @@ jobs:
           name: Test XYZ
           conclusion: ${{ job.status }}
           output: |
-            {"summary":${{ steps.trufflerun.outputs.summary }}}
+            {"summary":${{ steps.ReadTrufflerunFile.outputs.trufflescanresult }}}
