@@ -25,10 +25,10 @@ jobs:
           echo testingecho
           Get-Content output.json -Raw 
           $content = Get-Content output.json -Raw 
-          echo $content
+          echo this is the $content
           # end of optional handling for multi line json
           echo "::set-output name=trufflescanresult::$content"
-#        shell: cmd
+        shell: powershell
       - name: create checks
         uses: LouisBrunner/checks-action@v1.1.1
         if: always()
