@@ -17,9 +17,8 @@ jobs:
         run: npm install
       - name: Run trufflhog
         run: |
-          $ErrorView = 'NormalView'
-          echo on 
           C:\Users\sanka\AppData\Roaming\Python\Python310\site-packages\truffleHog\truffleHog.py --json --regex --entropy=False  https://github.com/imurpalvicky/testnodejsApp
+        shell: cmd
         id: trufflerun
       - name: ReadTrufflerunFile
         id: setTruffleOutput
