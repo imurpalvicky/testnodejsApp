@@ -19,7 +19,7 @@ jobs:
         run: |
           $ErrorView = 'NormalView'
           echo on 
-          C:\Users\sanka\AppData\Roaming\Python\Python310\site-packages\truffleHog\truffleHog.py --json --regex --entropy=False  https://imurpalvicky:${{secrets.GIT_SECRET_TOKEN}}@github.com/imurpalvicky/testnodejsApp
+          C:\Users\sanka\AppData\Roaming\Python\Python310\site-packages\truffleHog\truffleHog.py --json --regex --entropy=False  https://github.com/imurpalvicky/testnodejsApp
         id: trufflerun
       - name: ReadTrufflerunFile
         id: setTruffleOutput
