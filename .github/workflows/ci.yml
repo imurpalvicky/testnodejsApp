@@ -22,9 +22,10 @@ jobs:
       - name: ReadTrufflerunFile
         id: setTruffleOutput
         run: |
-          content='cat output.json'
+          $content = Get-Content .\file.txt -Raw 
           # end of optional handling for multi line json
           echo "::set-output name=trufflescanresult::$content"
+#        shell: cmd
       - name: create checks
         uses: LouisBrunner/checks-action@v1.1.1
         if: always()
