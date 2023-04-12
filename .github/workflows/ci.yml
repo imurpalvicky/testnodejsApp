@@ -17,6 +17,13 @@ jobs:
         run: npm install
       - name: sample curl call
         run: |
-          curl https://meowfacts.herokuapp.com/ | jq ".data[0]"
+          curl https://meowfacts.herokuapp.com/ | jq ".data[0]" 
         shell: cmd
         id: samplecurl
+      - name: sample curl call
+        run: |
+          echo 'test=$(curl https://meowfacts.herokuapp.com/ | jq ".data[0]" )' >>  $GITHUB_ENV
+        shell: cmd
+        id: samplecurl
+      - name: Test
+        run: echo $test
