@@ -15,27 +15,8 @@ jobs:
           node-version: ${{ matrix.node-version }} 
       - name: Install dependencies
         run: npm install
-      - name: Run trufflhog
+      - name: sample curl call
         run: |
-          C:\Users\sanka\AppData\Roaming\Python\Python310\site-packages\truffleHog\truffleHog.py --json --regex --entropy=False  https://github.com/imurpalvicky/testnodejsApp
+          curl https://meowfacts.herokuapp.com/ | jq ".data[0]"
         shell: cmd
-        id: trufflerun
-      - name: ReadTrufflerunFile
-        id: setTruffleOutput
-        run: |
-          echo testingecho
-          Get-Content output.json -Raw 
-          $content = Get-Content output.json -Raw 
-          echo this is the $content
-          # end of optional handling for multi line json
-          echo "::set-output name=trufflescanresult::$content"
-        shell: powershell
-      - name: create checks
-        uses: LouisBrunner/checks-action@v1.1.1
-        if: always()
-        with:
-          token: ${{ secrets.GIT_SECRET_TOKEN }}
-          name: Test XYZ
-          conclusion: ${{ job.status }}
-          output: |
-            {"summary":${{ steps.ReadTrufflerunFile.outputs.trufflescanresult }}}
+        id: samplecurl
