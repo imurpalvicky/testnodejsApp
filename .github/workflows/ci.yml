@@ -13,8 +13,8 @@ jobs:
 #        uses: actions/setup-node@v2
 #        with:
 #          node-version: ${{ matrix.node-version }} 
-      - name: Install dependencies
-        run: npm install
+#      - name: Install dependencies
+#        run: npm install
       - name: sample curl call
         run: |
           curl https://meowfacts.herokuapp.com/ | jq ".data[0]" 
