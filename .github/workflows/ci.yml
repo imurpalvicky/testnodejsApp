@@ -26,5 +26,5 @@ jobs:
         shell: cmd
         id: samplecurl2
       - name: Test
-        run: echo "$test"
+        run: echo "$GITHUB.test"
         shell: cmd
