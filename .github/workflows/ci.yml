@@ -18,7 +18,6 @@ jobs:
       - name: sample curl call
         run: |
           curl https://meowfacts.herokuapp.com/ | jq '.data[0]'
-        shell: cmd
         id: samplecurl
       - name: Set the value
         id: step_one
