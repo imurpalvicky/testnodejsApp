@@ -22,9 +22,9 @@ jobs:
         id: samplecurl
       - name: sample curl call
         run: |
-          echo "test=$(curl https://meowfacts.herokuapp.com/ | jq \".data[0]\" )" >> $GITHUB_ENV
+          echo "action_state=yellow" >> $GITHUB_ENV
         shell: cmd
         id: samplecurl2
       - name: Test
-        run: echo "${{ env.test }}"
+        run: echo "${{ env.action_state }}"
         shell: cmd
