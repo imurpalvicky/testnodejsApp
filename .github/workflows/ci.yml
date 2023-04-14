@@ -22,9 +22,8 @@ jobs:
         id: samplecurl
       - name: sample curl call
         run: |
-          response = $(curl https://meowfacts.herokuapp.com/ )         
-          echo "response from curl= $response" 
+          echo "test=$(curl https://meowfacts.herokuapp.com/ | jq \".data[0]\" )" >> $GITHUB_ENV
         shell: cmd
         id: samplecurl2
       - name: Test
-        run: echo $response
+        run: echo $test
