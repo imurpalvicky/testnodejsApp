@@ -2,7 +2,7 @@ name: buildworkflow
 on: pull_request
 jobs:
   build:
-    runs-on: "self-hosted"
+    runs-on: "ubuntu"
     strategy:
       matrix:
         node-version: [14.x]
