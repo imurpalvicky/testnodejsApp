@@ -1,0 +1,45 @@
+#!/bin/bash
+
+# Define your GitHub access token
+TOKEN="your_github_access_token"
+
+# Define the GraphQL query
+query='query ($repo_owner: String!, $repo_name: String!, $pr_number: Int!) { 
+  repository(owner: $repo_owner, name: $repo_name) { 
+    pullRequest(number: $pr_number) {
+      timelineItems(itemTypes: LABELED_EVENT, first: 100) {
+        nodes {
+          ... on LabeledEvent {
+            actor { login }
+            # add any other LabeledEvent fields you want to query here
+          }
+        }
+      }
+    }
+  }
+}'
+
+# Define the variables
+repo_owner="your_repo_owner"  # Replace with the repository owner
+repo_name="your_repo_name"    # Replace with the repository name
+pr_number=1                   # Replace with the pull request number
+
+# Construct the JSON payload with variables
+variables=$(jq -n \
+                  --arg repo_owner "$repo_owner" \
+                  --arg repo_name "$repo_name" \
+                  --arg pr_number "$pr_number" \
+                  '{repo_owner: $repo_owner, repo_name: $repo_name, pr_number: ($pr_number | tonumber)}')
+
+# Construct the GraphQL request
+request=$(jq -n --arg query "$query" --argjson variables "$variables" '{query: $query, variables: $variables}')
+
+# Make the GraphQL request using curl
+response=$(curl -s -X POST \
+  -H "Authorization: bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  --data "$request" \
+  https://api.github.com/graphql)
+
+# Print the response
+echo "$response"
