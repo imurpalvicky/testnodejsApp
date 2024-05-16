@@ -43,3 +43,68 @@ response=$(curl -s -X POST \
 
 # Print the response
 echo "$response"
+
+
+
+import requests
+import msal
+
+# Azure AD app credentials
+CLIENT_ID = 'your_client_id'
+CLIENT_SECRET = 'your_client_secret'
+TENANT_ID = 'your_tenant_id'
+
+# Email details
+EMAIL_FROM = 'your_email@domain.com'
+EMAIL_TO = 'recipient@domain.com'
+SUBJECT = 'Test Email'
+BODY = 'This is a test email sent from Python.'
+
+# Get access token
+authority = f"https://login.microsoftonline.com/{TENANT_ID}"
+app = msal.ConfidentialClientApplication(
+    CLIENT_ID, authority=authority,
+    client_credential=CLIENT_SECRET
+)
+
+scopes = ["https://graph.microsoft.com/.default"]
+result = app.acquire_token_for_client(scopes=scopes)
+
+if "access_token" in result:
+    access_token = result["access_token"]
+else:
+    print("Error obtaining access token.")
+    print(result)
+    exit()
+
+# Send email
+send_mail_url = 'https://graph.microsoft.com/v1.0/me/sendMail'
+headers = {
+    'Authorization': f'Bearer {access_token}',
+    'Content-Type': 'application/json'
+}
+
+email_message = {
+    "message": {
+        "subject": SUBJECT,
+        "body": {
+            "contentType": "Text",
+            "content": BODY
+        },
+        "toRecipients": [
+            {
+                "emailAddress": {
+                    "address": EMAIL_TO
+                }
+            }
+        ]
+    }
+}
+
+response = requests.post(send_mail_url, headers=headers, json=email_message)
+
+if response.status_code == 202:
+    print("Email sent successfully!")
+else:
+    print("Failed to send email.")
+    print(response.json())
