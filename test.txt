@@ -108,3 +108,24 @@ if response.status_code == 202:
 else:
     print("Failed to send email.")
     print(response.json())
+
+
+
+query($owner: String!, $name: String!, $workflowId: ID!, $cursor: String) {
+  repository(owner: $owner, name: $name) {
+    workflow(id: $workflowId) {
+      runs(first: 100, after: $cursor) {
+        nodes {
+          id
+          name
+          status
+          conclusion
+          createdAt
+        }
+        pageInfo {
+          endCursor
+          hasNextPage
+        }
+      }
+    }
+  }
