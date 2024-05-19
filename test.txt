@@ -110,6 +110,18 @@ else:
     print(response.json())
 
 
+get_workflow_id_query='
+query($runId: ID!) {
+  node(id: $runId) {
+    ... on WorkflowRun {
+      workflow {
+        id
+      }
+    }
+  }
+}'
+
+
 
 query($owner: String!, $name: String!, $workflowId: ID!, $cursor: String) {
   repository(owner: $owner, name: $name) {
