@@ -141,3 +141,43 @@ query($owner: String!, $name: String!, $workflowId: ID!, $cursor: String) {
       }
     }
   }
+
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
+def send_email(subject, body, to_address, from_address, smtp_server, smtp_port):
+    try:
+        # Create a MIME object
+        msg = MIMEMultipart()
+        msg['From'] = from_address
+        msg['To'] = to_address
+        msg['Subject'] = subject
+
+        # Attach the body with the msg instance
+        msg.attach(MIMEText(body, 'plain'))
+
+        # Connect to the server
+        server = smtplib.SMTP(smtp_server, smtp_port)
+
+        # Send the email
+        server.sendmail(from_address, to_address, msg.as_string())
+
+        # Terminate the session
+        server.quit()
+
+        print("Email sent successfully!")
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+
+# Configuration
+subject = "Test Email"
+body = "This is a test email sent using an Exchange relay server."
+to_address = "recipient@example.com"
+from_address = "sender@example.com"
+smtp_server = "smtp.yourdomain.com"
+smtp_port = 25  # Use 25 or 587 (without STARTTLS) depending on your server configuration
+
+# Send the email
+send_email(subject, body, to_address, from_address, smtp_server, smtp_port)
+
