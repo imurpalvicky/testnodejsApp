@@ -182,8 +182,7 @@ smtp_port = 25  # Use 25 or 587 (without STARTTLS) depending on your server conf
 send_email(subject, body, to_address, from_address, smtp_server, smtp_port)
 
 
-
-   name: Retrieve Vault Secrets
+name: Retrieve Vault Secrets
 
 on: [push, pull_request]
 
@@ -200,6 +199,16 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y jq curl
 
+      - name: Retrieve AWS credentials from IMDSv2
+        run: |
+          TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+          ROLE_NAME=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" -v http://169.254.169.254/latest/meta-data/iam/security-credentials/)
+          AWS_CREDENTIALS=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" -v http://169.254.169.254/latest/meta-data/iam/security-credentials/$ROLE_NAME)
+
+          export AWS_ACCESS_KEY_ID=$(echo $AWS_CREDENTIALS | jq -r '.AccessKeyId')
+          export AWS_SECRET_ACCESS_KEY=$(echo $AWS_CREDENTIALS | jq -r '.SecretAccessKey')
+          export AWS_SESSION_TOKEN=$(echo $AWS_CREDENTIALS | jq -r '.Token')
+
       - name: Authenticate with Vault using AWS and retrieve secrets
         env:
           VAULT_ADDR: ${{ secrets.VAULT_ADDR }}
@@ -209,28 +218,21 @@ jobs:
           SECRET_PATH="your-secret-path"  # Replace with your actual secret path
           AWS_AUTH_ROLE="your-vault-role"  # Replace with your actual role
 
-          # Get AWS IAM credentials from instance metadata
-          AWS_IAM_REQUEST=$(curl -s http://169.254.169.254/latest/meta-data/iam/security-credentials/)
-          IAM_ROLE_NAME=$(echo $AWS_IAM_REQUEST | jq -r 'keys[0]')
-          AWS_CREDENTIALS=$(curl -s http://169.254.169.254/latest/meta-data/iam/security-credentials/$IAM_ROLE_NAME)
-
-          ACCESS_KEY=$(echo $AWS_CREDENTIALS | jq -r '.AccessKeyId')
-          SECRET_KEY=$(echo $AWS_CREDENTIALS | jq -r '.SecretAccessKey')
-          SESSION_TOKEN=$(echo $AWS_CREDENTIALS | jq -r '.Token')
-
           # Construct the Vault login payload
           LOGIN_PAYLOAD=$(jq -n \
             --arg role "$AWS_AUTH_ROLE" \
-            --arg access_key "$ACCESS_KEY" \
-            --arg secret_key "$SECRET_KEY" \
-            --arg session_token "$SESSION_TOKEN" \
+            --arg access_key "$AWS_ACCESS_KEY_ID" \
+            --arg secret_key "$AWS_SECRET_ACCESS_KEY" \
+            --arg session_token "$AWS_SESSION_TOKEN" \
             '{
               role: $role,
               iam_http_request_method: "POST",
               iam_request_url: "https://sts.amazonaws.com/",
               iam_request_body: "Action=GetCallerIdentity&Version=2011-06-15",
               iam_request_headers: {
-                "X-Amz-Security-Token": $session_token
+                "X-Amz-Security-Token": $session_token,
+                "Authorization": "AWS4-HMAC-SHA256",
+                "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
               }
             }')
 
@@ -258,3 +260,4 @@ jobs:
 
           # Optionally, you can export the secrets as environment variables
           export YOUR_SECRET_KEY=$(echo "$SECRETS" | jq -r '.your_secret_key')
+
