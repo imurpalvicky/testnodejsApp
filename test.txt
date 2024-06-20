@@ -181,3 +181,80 @@ smtp_port = 25  # Use 25 or 587 (without STARTTLS) depending on your server conf
 # Send the email
 send_email(subject, body, to_address, from_address, smtp_server, smtp_port)
 
+
+
+   name: Retrieve Vault Secrets
+
+on: [push, pull_request]
+
+jobs:
+  retrieve-secrets:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install necessary tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq curl
+
+      - name: Authenticate with Vault using AWS and retrieve secrets
+        env:
+          VAULT_ADDR: ${{ secrets.VAULT_ADDR }}
+        run: |
+          # Set variables
+          VAULT_LOGIN_ENDPOINT="$VAULT_ADDR/v1/auth/aws/login"
+          SECRET_PATH="your-secret-path"  # Replace with your actual secret path
+          AWS_AUTH_ROLE="your-vault-role"  # Replace with your actual role
+
+          # Get AWS IAM credentials from instance metadata
+          AWS_IAM_REQUEST=$(curl -s http://169.254.169.254/latest/meta-data/iam/security-credentials/)
+          IAM_ROLE_NAME=$(echo $AWS_IAM_REQUEST | jq -r 'keys[0]')
+          AWS_CREDENTIALS=$(curl -s http://169.254.169.254/latest/meta-data/iam/security-credentials/$IAM_ROLE_NAME)
+
+          ACCESS_KEY=$(echo $AWS_CREDENTIALS | jq -r '.AccessKeyId')
+          SECRET_KEY=$(echo $AWS_CREDENTIALS | jq -r '.SecretAccessKey')
+          SESSION_TOKEN=$(echo $AWS_CREDENTIALS | jq -r '.Token')
+
+          # Construct the Vault login payload
+          LOGIN_PAYLOAD=$(jq -n \
+            --arg role "$AWS_AUTH_ROLE" \
+            --arg access_key "$ACCESS_KEY" \
+            --arg secret_key "$SECRET_KEY" \
+            --arg session_token "$SESSION_TOKEN" \
+            '{
+              role: $role,
+              iam_http_request_method: "POST",
+              iam_request_url: "https://sts.amazonaws.com/",
+              iam_request_body: "Action=GetCallerIdentity&Version=2011-06-15",
+              iam_request_headers: {
+                "X-Amz-Security-Token": $session_token
+              }
+            }')
+
+          # Authenticate with Vault and get the token
+          VAULT_TOKEN=$(curl --silent --request POST --data "$LOGIN_PAYLOAD" "$VAULT_LOGIN_ENDPOINT" | jq -r '.auth.client_token')
+
+          # Check if the token was retrieved successfully
+          if [ -z "$VAULT_TOKEN" ]; then
+            echo "Failed to retrieve Vault token"
+            exit 1
+          fi
+
+          echo "Vault authentication successful"
+
+          # Retrieve secrets from Vault
+          SECRETS=$(curl --silent --header "X-Vault-Token: $VAULT_TOKEN" "$VAULT_ADDR/v1/$SECRET_PATH" | jq -r '.data')
+
+          # Check if the secrets were retrieved successfully
+          if [ -z "$SECRETS" ]; then
+            echo "Failed to retrieve secrets"
+            exit 1
+          fi
+
+          echo "Secrets retrieved: $SECRETS"
+
+          # Optionally, you can export the secrets as environment variables
+          export YOUR_SECRET_KEY=$(echo "$SECRETS" | jq -r '.your_secret_key')
