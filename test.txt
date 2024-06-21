@@ -261,3 +261,44 @@ jobs:
           # Optionally, you can export the secrets as environment variables
           export YOUR_SECRET_KEY=$(echo "$SECRETS" | jq -r '.your_secret_key')
 
+
+name: Check .github Directory Changes
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  check-github-directory:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Check for .github directory changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          REPO_OWNER=${{ github.repository.owner.login }}
+          REPO_NAME=${{ github.repository.name }}
+
+          echo "Fetching changed files for PR #$PR_NUMBER in $REPO_OWNER/$REPO_NAME..."
+          CHANGED_FILES=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+            "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/pulls/$PR_NUMBER/files" \
+            | jq -r '.[].filename')
+
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+
+          if echo "$CHANGED_FILES" | grep -q '^.github/'; then
+            echo "Changes detected in the .github directory."
+            echo "The pull request includes changes in the .github directory."
+            echo "found=true" >> $GITHUB_ENV
+          else
+            echo "No changes detected in the .github directory."
+            echo "The pull request does not include changes in the .github directory."
+            echo "found=false" >> $GITHUB_ENV
+          fi
+
