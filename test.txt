@@ -2,6 +2,9 @@
 
 #!/bin/bash
 
+=TEXTJOIN(", ", TRUE, IFERROR(MID(A1, FIND("-", A1) + ROW(INDIRECT("1:" & LEN(A1) - FIND("-", A1))), 4) * (ISNUMBER(--MID(A1, FIND("-", A1) + ROW(INDIRECT("1:" & LEN(A1) - FIND("-", A1))), 4))) * (LEN(MID(A1, FIND("-", A1) + ROW(INDIRECT("1:" & LEN(A1) - FIND("-", A1))), 4)) = 3) + MID(A1, FIND("-", A1) + ROW(INDIRECT("1:" & LEN(A1) - FIND("-", A1))), 3) * (ISNUMBER(--MID(A1, FIND("-", A1) + ROW(INDIRECT("1:" & LEN(A1) - FIND("-", A1))), 3))) * (LEN(MID(A1, FIND("-", A1) + ROW(INDIRECT("1:" & LEN(A1) - FIND("-", A1))), 3)) = 3), ""), ""))
+
+
 # Function to URL-encode a string
 urlencode() {
     local string="${1}"
