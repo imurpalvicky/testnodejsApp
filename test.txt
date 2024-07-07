@@ -2,6 +2,9 @@
 
 #!/bin/bash
 
+=TEXTJOIN(", ", TRUE, IFERROR(FILTERXML("<root><x>" & SUBSTITUTE(B1, " ", "</x><x>") & "</x></root>", "//x[number(.)=number(.) and (string-length(.)=3 or string-length(.)=4)]"), ""))
+
+
 =TEXTJOIN(", ", TRUE, IFERROR(MID(A1, FIND("-", A1) + ROW(INDIRECT("1:" & LEN(A1) - FIND("-", A1))), 4) * (ISNUMBER(--MID(A1, FIND("-", A1) + ROW(INDIRECT("1:" & LEN(A1) - FIND("-", A1))), 4))) * (LEN(MID(A1, FIND("-", A1) + ROW(INDIRECT("1:" & LEN(A1) - FIND("-", A1))), 4)) = 3) + MID(A1, FIND("-", A1) + ROW(INDIRECT("1:" & LEN(A1) - FIND("-", A1))), 3) * (ISNUMBER(--MID(A1, FIND("-", A1) + ROW(INDIRECT("1:" & LEN(A1) - FIND("-", A1))), 3))) * (LEN(MID(A1, FIND("-", A1) + ROW(INDIRECT("1:" & LEN(A1) - FIND("-", A1))), 3)) = 3), ""), ""))
 
 
