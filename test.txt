@@ -14,11 +14,26 @@
 =LET(
     string, A1,
     len, LEN(string),
-    digits, FILTER(MID(string, ROW(INDIRECT("1:" & len)), 1), ISNUMBER(--MID(string, ROW(INDIRECT("1:" & len)), 1))),
-    first_digit_pos, MIN(IF(LEN(digits) >= 3, ROW(INDIRECT("1:" & len)), len+1)),
-    extracted_digits, MID(string, first_digit_pos, MIN(4, len - first_digit_pos + 1)),
-    IF(ISNUMBER(--extracted_digits), extracted_digits, "")
+    digits, "",
+    pos, 1,
+    extracted, "",
+    WHILE(pos <= len,
+        char, MID(string, pos, 1),
+        IF(ISNUMBER(--char),
+            digits, digits & char,
+            IF(LEN(digits) >= 3,
+                IF(LEN(digits) = 3,
+                    IF(extracted = "", digits, extracted),
+                    IF(extracted = "", digits & char, extracted & char),
+                    digits & char,
+                digits & char,
+            digits & char,
+            digits & char,
+        pos, pos + 1,
+    ),
+    IF(extracted = "", "", extracted)
 )
+
 
 
 
