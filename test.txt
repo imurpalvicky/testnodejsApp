@@ -2,12 +2,11 @@
 
 #!/bin/bash
 
-=TEXTJOIN(", ", TRUE, IFERROR(FILTERXML("<root><x>" & SUBSTITUTE(B1, " ", "</x><x>") & "</x></root>", "//x[number(.)=number(.) and (string-length(.)=3 or string-length(.)=4)]"), ""))
-
-=TEXTJOIN(", ", TRUE, IF(ISNUMBER(FIND(ROW(INDIRECT("100:9999")), A1)), ROW(INDIRECT("100:9999")), ""))
-
-
-=TEXTJOIN(", ", TRUE, IFERROR(MID(A1, FIND("-", A1) + ROW(INDIRECT("1:" & LEN(A1) - FIND("-", A1))), 4) * (ISNUMBER(--MID(A1, FIND("-", A1) + ROW(INDIRECT("1:" & LEN(A1) - FIND("-", A1))), 4))) * (LEN(MID(A1, FIND("-", A1) + ROW(INDIRECT("1:" & LEN(A1) - FIND("-", A1))), 4)) = 3) + MID(A1, FIND("-", A1) + ROW(INDIRECT("1:" & LEN(A1) - FIND("-", A1))), 3) * (ISNUMBER(--MID(A1, FIND("-", A1) + ROW(INDIRECT("1:" & LEN(A1) - FIND("-", A1))), 3))) * (LEN(MID(A1, FIND("-", A1) + ROW(INDIRECT("1:" & LEN(A1) - FIND("-", A1))), 3)) = 3), ""), ""))
+=IFERROR(
+    MID(A1, MIN(IF(ISNUMBER(VALUE(MID(A1, ROW(INDIRECT("1:" & LEN(A1)-2)), 3))), ROW(INDIRECT("1:" & LEN(A1)-2)), 9999), IF(ISNUMBER(VALUE(MID(A1, ROW(INDIRECT("1:" & LEN(A1)-3)), 4))), ROW(INDIRECT("1:" & LEN(A1)-3)), 9999)), 
+    IF(ISNUMBER(VALUE(MID(A1, MIN(IF(ISNUMBER(VALUE(MID(A1, ROW(INDIRECT("1:" & LEN(A1)-2)), 3))), ROW(INDIRECT("1:" & LEN(A1)-2)), 9999), IF(ISNUMBER(VALUE(MID(A1, ROW(INDIRECT("1:" & LEN(A1)-3)), 4))), ROW(INDIRECT("1:" & LEN(A1)-3)), 9999)), 3))), 3, 4)),
+    ""
+)
 
 
 # Function to URL-encode a string
