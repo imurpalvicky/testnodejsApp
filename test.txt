@@ -20,6 +20,9 @@
 
 =IFERROR(IFERROR(MID(A1, SEARCH("000", A1), 3), MID(A1, SEARCH("00", A1), 3)), "")
 
+=IFERROR(IFERROR(MID(A1, MIN(IF(ISNUMBER(--MID(A1, ROW(INDIRECT("1:" & LEN(A1))), 4)), ROW(INDIRECT("1:" & LEN(A1))), "")), 4),
+               MID(A1, MIN(IF(ISNUMBER(--MID(A1, ROW(INDIRECT("1:" & LEN(A1))), 3)), ROW(INDIRECT("1:" & LEN(A1))), "")), 3)),
+         "")
 
 
 
