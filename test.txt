@@ -11,6 +11,16 @@
 
 =IFERROR(MID(A1, MIN(FIND({0,1,2,3,4,5,6,7,8,9}, A1&"0123456789")), 4), "")
 
+=LET(
+    string, A1,
+    len, LEN(string),
+    digits, FILTER(MID(string, ROW(INDIRECT("1:" & len)), 1), ISNUMBER(--MID(string, ROW(INDIRECT("1:" & len)), 1))),
+    first_digit_pos, MIN(IF(LEN(digits) >= 3, ROW(INDIRECT("1:" & len)), len+1)),
+    extracted_digits, MID(string, first_digit_pos, MIN(4, len - first_digit_pos + 1)),
+    IF(ISNUMBER(--extracted_digits), extracted_digits, "")
+)
+
+
 
 
 
