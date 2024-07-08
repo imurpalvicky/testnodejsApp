@@ -16,25 +16,18 @@
     len, LEN(string),
     digits, "",
     pos, 1,
-    extracted, "",
     WHILE(pos <= len,
         char, MID(string, pos, 1),
         IF(ISNUMBER(--char),
-            digits, digits & char,
+            digits & char,
             IF(LEN(digits) >= 3,
                 IF(LEN(digits) = 3,
-                    IF(extracted = "", digits, extracted),
-                    IF(extracted = "", digits & char, extracted & char),
-                    digits & char,
+                    digits,
+                    IF(AND(LEN(digits) = 4, digits), digits, digits),
+                        4,4),
                 digits & char,
-            digits & char,
-            digits & char,
         pos, pos + 1,
-    ),
-    IF(extracted = "", "", extracted)
-)
-
-
+    )
 
 
 
