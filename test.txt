@@ -9,6 +9,9 @@
     )
 )
 
+=IFERROR(MID(A1, MIN(IF(ISNUMBER(--MID(A1, ROW(INDIRECT("1:" & LEN(A1))), 3)), ROW(INDIRECT("1:" & LEN(A1))), "")), 3), "")
+
+
 =IFERROR(IF(ISNUMBER(FIND("0000", A1)), MID(A1, FIND("0000", A1), 4), IF(ISNUMBER(FIND("000", A1)), MID(A1, FIND("000", A1), 3), "")), "")
 
 
