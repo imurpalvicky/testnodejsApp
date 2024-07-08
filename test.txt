@@ -2,14 +2,13 @@
 
 #!/bin/bash
 =IFERROR(
-    MID(A1, 
-        MIN(IF(ISNUMBER(VALUE(MID(A1, ROW(INDIRECT("1:" & LEN(A1)-3)), 4))), ROW(INDIRECT("1:" & LEN(A1)-3)))), 4),
+    MID(A1, FIND(AGGREGATE(15, 6, VALUE(MID(A1, ROW(INDIRECT("1:"&LEN(A1)-3)), 4)), 1), A1), 4),
     IFERROR(
-        MID(A1, 
-            MIN(IF(ISNUMBER(VALUE(MID(A1, ROW(INDIRECT("1:" & LEN(A1)-2)), 3))), ROW(INDIRECT("1:" & LEN(A1)-2)))), 3),
+        MID(A1, FIND(AGGREGATE(15, 6, VALUE(MID(A1, ROW(INDIRECT("1:"&LEN(A1)-2)), 3)), 1), A1), 3),
         ""
     )
 )
+
 
 
 
