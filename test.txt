@@ -10,24 +10,9 @@
 )
 
 =IFERROR(MID(A1, MIN(FIND({0,1,2,3,4,5,6,7,8,9}, A1&"0123456789")), 4), "")
+=IFERROR(MID(A1, SEARCH("0000", A1), 4), "")
 
-=LET(
-    string, A1,
-    len, LEN(string),
-    digits, "",
-    pos, 1,
-    WHILE(pos <= len,
-        char, MID(string, pos, 1),
-        IF(ISNUMBER(--char),
-            digits & char,
-            IF(LEN(digits) >= 3,
-                IF(LEN(digits) = 3,
-                    digits,
-                    IF(AND(LEN(digits) = 4, digits), digits, digits),
-                        4,4),
-                digits & char,
-        pos, pos + 1,
-    )
+=IFERROR(IFERROR(MID(A1, SEARCH("000", A1), 3), MID(A1, SEARCH("00", A1), 3)), "")
 
 
 
