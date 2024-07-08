@@ -9,8 +9,7 @@
     )
 )
 
-=IFERROR(IF(MID(A1, MIN(IF(ISNUMBER(SEARCH({0,1,2,3,4,5,6,7,8,9}, A1))), SEARCH({0,1,2,3,4,5,6,7,8,9}, A1), "")), 4) <> "", MID(A1, MIN(IF(ISNUMBER(SEARCH({0,1,2,3,4,5,6,7,8,9}, A1))), SEARCH({0,1,2,3,4,5,6,7,8,9}, A1), ""), 4),
-           IFERROR(MID(A1, MIN(IF(ISNUMBER(SEARCH({0,1,2,3,4,5,6,7,8,9}, A1))), SEARCH({0,1,2,3,4,5,6,7,8,9}, A1), ""), 3), ""))
+=IFERROR(IF(ISNUMBER(FIND("0000", A1)), MID(A1, FIND("0000", A1), 4), IF(ISNUMBER(FIND("000", A1)), MID(A1, FIND("000", A1), 3), "")), "")
 
 
 =IFERROR(MID(A1, MIN(FIND({0,1,2,3,4,5,6,7,8,9}, A1&"0123456789")), 4), "")
