@@ -1,5 +1,31 @@
 #!/bin/bash
 
+import os
+import base64
+from github import GithubIntegration
+
+# Load environment variables
+app_id = os.getenv('GITHUB_APP_ID')
+private_key_base64 = os.getenv('GITHUB_APP_PRIVATE_KEY_BASE64')
+
+# Decode the base64 encoded private key
+private_key = base64.b64decode(private_key_base64).decode('utf-8')
+
+# Initialize the GithubIntegration instance
+integration = GithubIntegration(app_id, private_key)
+
+# Get the installation access token for the installation
+installation_id = 'YOUR_INSTALLATION_ID'
+access_token = integration.get_access_token(installation_id).token
+
+# Use the access token to authenticate with GitHub
+g = GithubIntegration(access_token)
+
+# Example request: Get authenticated user information
+user = g.get_user()
+print(user.login)
+
+
 #!/bin/bash
 =IFERROR(
     MID(A1, MIN(IF(ISNUMBER(--MID(A1, ROW(INDIRECT("1:" & LEN(A1))), 4)), ROW(INDIRECT("1:" & LEN(A1)))), LEN(A1)+1), 4),
