@@ -3,6 +3,9 @@ import os
 import base64
 import psycopg2
 from psycopg2.extras import Json
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
 
@@ -27,11 +30,21 @@ def handle_github_event():
     if request.method == 'POST':
         payload = request.json
 
-        # Insert JSON payload into PostgreSQL table
+        # Extract attributes from the JSON payload
+        reponame = payload.get('repository', {}).get('name')
+        orgname = payload.get('repository', {}).get('owner', {}).get('login')
+        eventtype = request.headers.get('X-GitHub-Event')
+        eventstatus = 'received'  # or any logic to determine the status
+        event_key = request.headers.get('X-GitHub-Delivery')
+
+        # Insert data into PostgreSQL table
         with conn.cursor() as cursor:
             cursor.execute(
-                "INSERT INTO github_events (payload) VALUES (%s)",
-                [Json(payload)]
+                """
+                INSERT INTO github_events (reponame, orgname, eventtype, eventstatus, event_key, metadata)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                """,
+                (reponame, orgname, eventtype, eventstatus, event_key, Json(payload))
             )
             conn.commit()
 
