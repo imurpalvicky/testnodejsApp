@@ -1,0 +1,60 @@
+from flask import Flask, request, jsonify
+import os
+import boto3
+from botocore.exceptions import NoCredentialsError, PartialCredentialsError
+from dotenv import load_dotenv
+import uuid
+
+# Load environment variables from a .env file
+load_dotenv()
+
+app = Flask(__name__)
+
+# DynamoDB configuration
+AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+AWS_REGION = os.getenv('AWS_REGION', 'us-west-2')
+DYNAMODB_TABLE_NAME = os.getenv('DYNAMODB_TABLE_NAME', 'github_events')
+
+# Initialize DynamoDB client
+dynamodb = boto3.resource(
+    'dynamodb',
+    region_name=AWS_REGION,
+    aws_access_key_id=AWS_ACCESS_KEY_ID,
+    aws_secret_access_key=AWS_SECRET_ACCESS_KEY
+)
+table = dynamodb.Table(DYNAMODB_TABLE_NAME)
+
+@app.route('/webhook', methods=['POST'])
+def handle_github_event():
+    if request.method == 'POST':
+        payload = request.json
+
+        # Extract attributes from the JSON payload
+        reponame = payload.get('repository', {}).get('name')
+        orgname = payload.get('repository', {}).get('owner', {}).get('login')
+        eventtype = request.headers.get('X-GitHub-Event')
+        eventstatus = 'received'  # or any logic to determine the status
+        event_key = request.headers.get('X-GitHub-Delivery')
+        event_id = str(uuid.uuid4())  # Generate a unique event ID
+
+        # Prepare the item to be inserted into DynamoDB
+        item = {
+            'event_id': event_id,
+            'reponame': reponame,
+            'orgname': orgname,
+            'eventtype': eventtype,
+            'eventstatus': eventstatus,
+            'event_key': event_key,
+            'metadata': payload
+        }
+
+        try:
+            # Insert data into DynamoDB table
+            table.put_item(Item=item)
+            return jsonify({'status': 'success'}), 200
+        except (NoCredentialsError, PartialCredentialsError) as e:
+            return jsonify({'status': 'error', 'message': str(e)}), 500
+
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0', port=5000)
