@@ -14,12 +14,13 @@ dynamodb = session.resource('dynamodb')
 # Specify the table
 table = dynamodb.Table('YourTableName')
 
-def query_dynamodb(reponame, eventuuid_prefix):
+def query_dynamodb(reponame, eventuuid_prefix, eventtype):
     try:
-        # Query the table with a condition that eventuuid starts with a specific prefix
+        # Query the table with conditions on reponame and eventuuid, and filter on eventtype
         response = table.query(
             KeyConditionExpression=boto3.dynamodb.conditions.Key('reponame').eq(reponame) & 
-                                    boto3.dynamodb.conditions.Key('eventuuid').begins_with(eventuuid_prefix)
+                                    boto3.dynamodb.conditions.Key('eventuuid').begins_with(eventuuid_prefix),
+            FilterExpression=boto3.dynamodb.conditions.Attr('eventtype').eq(eventtype)
         )
         return response['Items']
     except Exception as e:
@@ -46,11 +47,12 @@ def write_to_json_file(data, filename='data.json'):
     except Exception as e:
         print(e)
 
-# Replace 'your_reponame' and 'your_eventuuid_prefix' with actual values
+# Replace 'your_reponame', 'your_eventuuid_prefix', and 'your_eventtype' with actual values
 reponame = 'your_reponame'
 eventuuid_prefix = 'your_eventuuid_prefix'
+eventtype = 'your_eventtype'
 
-items = query_dynamodb(reponame, eventuuid_prefix)
+items = query_dynamodb(reponame, eventuuid_prefix, eventtype)
 
 if items:
     write_to_json_file(items, 'output.json')
