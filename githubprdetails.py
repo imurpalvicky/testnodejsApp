@@ -1,11 +1,17 @@
 import requests
 import json
 from datetime import datetime
+import boto3
 
 # GitHub Personal Access Token
 GITHUB_TOKEN = 'YOUR_GITHUB_TOKEN'
 ORG_NAME = 'YOUR_ORG_NAME'
 HEADERS = {"Authorization": f"Bearer {GITHUB_TOKEN}"}
+
+# AWS Credentials
+AWS_ACCESS_KEY = 'YOUR_AWS_ACCESS_KEY'
+AWS_SECRET_KEY = 'YOUR_AWS_SECRET_KEY'
+DYNAMO_TABLE_NAME = 'YOUR_DYNAMO_TABLE_NAME'
 
 def run_query(query):
     """Run a GraphQL query and return the json response."""
@@ -126,10 +132,39 @@ def filter_pull_requests(pull_requests, start_date, end_date):
     
     return filtered_prs
 
+def write_to_dynamodb(pr_details, dynamo_client, table_name):
+    """Write a single PR detail to DynamoDB."""
+    dynamo_client.put_item(
+        TableName=table_name,
+        Item={
+            'repo_name': {'S': pr_details['repo_name']},
+            'title': {'S': pr_details['title']},
+            'created_at': {'S': pr_details['created_at']},
+            'state': {'S': pr_details['state']},
+            'closed_at': {'S': pr_details['closed_at'] or 'null'},
+            'base_branch': {'S': pr_details['base_branch']},
+            'head_branch': {'S': pr_details['head_branch']},
+            'author': {'S': pr_details['author']},
+            'labels': {'SS': pr_details['labels']},
+            'comments': {'L': [{'M': {
+                'comment_author': {'S': comment['comment_author']},
+                'comment_body': {'S': comment['comment_body']},
+                'comment_created_at': {'S': comment['comment_created_at']}
+            }} for comment in pr_details['comments']]}
+        }
+    )
+
 def main():
     # Define the date range for filtering
     start_date = "2023-01-01"
     end_date = "2023-12-31"
+
+    # Initialize DynamoDB client
+    dynamo_client = boto3.client(
+        'dynamodb',
+        aws_access_key_id=AWS_ACCESS_KEY,
+        aws_secret_access_key=AWS_SECRET_KEY
+    )
 
     repositories = fetch_all_repositories()
     all_prs = []
@@ -162,8 +197,11 @@ def main():
                 ]
             }
             all_prs.append(pr_details)
+            write_to_dynamodb(pr_details, dynamo_client, DYNAMO_TABLE_NAME)
     
-    print(json.dumps(all_prs, indent=4))
+    # Write the JSON dump to a file
+    with open('pull_requests.json', 'w') as file:
+        json.dump(all_prs, file, indent=4)
 
 if __name__ == "__main__":
     main()
