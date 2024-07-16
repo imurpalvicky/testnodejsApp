@@ -132,6 +132,7 @@ def main():
     end_date = "2023-12-31"
 
     repositories = fetch_all_repositories()
+    all_prs = []
 
     for repository in repositories:
         print(f"Repository: {repository}")
@@ -141,18 +142,28 @@ def main():
         filtered_pull_requests = filter_pull_requests(pull_requests, start_date, end_date)
         
         for pr in filtered_pull_requests:
-            print(f"  PR Title: {pr['title']}")
-            print(f"  Created At: {pr['createdAt']}")
-            print(f"  State: {pr['state']}")
-            print(f"  Closed At: {pr['closedAt']}")
-            print(f"  Base Branch: {pr['baseRefName']}")
-            print(f"  Head Branch: {pr['headRefName']}")
-            print(f"  Author: {pr['author']['login']}")
-            print(f"  Labels: {[label['name'] for label in pr['labels']['nodes']]}")
-            for comment in pr["comments"]["nodes"]:
-                print(f"    Comment Author: {comment['author']['login']}")
-                print(f"    Comment Body: {comment['body']}")
-                print(f"    Comment Created At: {comment['createdAt']}")
+            pr_details = {
+                "repo_name": repository,
+                "title": pr['title'],
+                "created_at": pr['createdAt'],
+                "state": pr['state'],
+                "closed_at": pr['closedAt'],
+                "base_branch": pr['baseRefName'],
+                "head_branch": pr['headRefName'],
+                "author": pr['author']['login'],
+                "labels": [label['name'] for label in pr['labels']['nodes']],
+                "comments": [
+                    {
+                        "comment_author": comment['author']['login'],
+                        "comment_body": comment['body'],
+                        "comment_created_at": comment['createdAt']
+                    }
+                    for comment in pr["comments"]["nodes"]
+                ]
+            }
+            all_prs.append(pr_details)
+    
+    print(json.dumps(all_prs, indent=4))
 
 if __name__ == "__main__":
     main()
