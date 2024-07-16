@@ -1,0 +1,48 @@
+import boto3
+
+# Initialize a session using Amazon DynamoDB
+session = boto3.Session(
+    aws_access_key_id='YOUR_ACCESS_KEY',
+    aws_secret_access_key='YOUR_SECRET_KEY',
+    region_name='YOUR_REGION'
+)
+
+# Initialize DynamoDB resource
+dynamodb = session.resource('dynamodb')
+
+# Specify the table
+table = dynamodb.Table('YourTableName')
+
+def scan_table():
+    try:
+        response = table.scan()
+        return response['Items']
+    except Exception as e:
+        print(e)
+        return None
+
+def delete_item(reponame, eventuuid):
+    try:
+        response = table.delete_item(
+            Key={
+                'reponame': reponame,
+                'eventuuid': eventuuid
+            }
+        )
+        return response
+    except Exception as e:
+        print(e)
+        return None
+
+# Scan the table to get all items
+items = scan_table()
+
+if items:
+    for item in items:
+        reponame = item['reponame']
+        eventuuid = item['eventuuid']
+        delete_response = delete_item(reponame, eventuuid)
+        if delete_response:
+            print(f"Deleted item with reponame: {reponame} and eventuuid: {eventuuid}")
+else:
+    print("No items found.")
