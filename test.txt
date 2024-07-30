@@ -1,4 +1,4 @@
-#!/bin/bash
+I'm#!/bin/bash
 
 import os
 import base64
@@ -409,3 +409,19 @@ jobs:
             echo "found=false" >> $GITHUB_ENV
           fi
 
+{
+  organization(login: "x") {
+    repositories(first: 100, query: "*1234*") {
+      nodes {
+        name
+        pullRequests(first: 100, labels: "chg1234") {
+          nodes {
+            title
+            number
+            url
+          }
+        }
+      }
+    }
+  }
+}
