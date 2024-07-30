@@ -1,0 +1,8 @@
+{
+  "query": "query($org: String!, $repoPattern: String!, $label: String!) { organization(login: $org) { repositories(first: 100, query: $repoPattern) { nodes { name pullRequests(first: 100) { nodes { title number url labels(first: 100, query: $label) { nodes { name author { login } } } } } } } } }",
+  "variables": {
+    "org": "your_organization",
+    "repoPattern": "*1234*",
+    "label": "chg1234"
+  }
+}
