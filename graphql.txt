@@ -6,3 +6,61 @@
     "label": "chg1234"
   }
 }
+
+name: Search Pull Requests
+
+on:
+  workflow_dispatch:
+    inputs:
+      repo_pattern:
+        description: 'Repository name pattern'
+        required: true
+        default: '*1234*'
+      label:
+        description: 'Label name'
+        required: true
+        default: 'chg1234'
+
+jobs:
+  query:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Search Repositories
+        id: search_repos
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          REPO_PATTERN="${{ github.event.inputs.repo_pattern }}"
+          LABEL="${{ github.event.inputs.label }}"
+          TOKEN="${{ secrets.GITHUB_TOKEN }}"
+
+          # Search for repositories
+          REPOS=$(curl -s -H "Authorization: Bearer $TOKEN" \
+                      -H "Accept: application/vnd.github.v3+json" \
+                      "https://api.github.com/search/repositories?q=${REPO_PATTERN}")
+
+          # Extract repository names
+          REPO_NAMES=$(echo "$REPOS" | jq -r '.items[].full_name')
+
+          # Initialize results array
+          RESULTS=""
+
+          for REPO in $REPO_NAMES; do
+            # Search for pull requests with the label in each repository
+            PRS=$(curl -s -H "Authorization: Bearer $TOKEN" \
+                        -H "Accept: application/vnd.github.v3+json" \
+                        "https://api.github.com/repos/$REPO/issues?state=open&labels=$LABEL")
+
+            # Extract relevant pull request information
+            PR_INFO=$(echo "$PRS" | jq -r --arg repo "$REPO" '.[] | "\($repo): \(.title) (\(.number)) - \(.html_url)"')
+
+            # Append results
+            RESULTS+="$PR_INFO\n"
+          done
+
+          # Print the results
+          echo -e "$RESULTS"
