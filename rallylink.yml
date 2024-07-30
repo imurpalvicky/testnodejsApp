@@ -1,0 +1,57 @@
+name: Check Rally Link Change
+
+on:
+  pull_request_target:
+    types: [synchronize]
+
+jobs:
+  check-rally-link:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
+
+    - name: Check if rallyLink is part of the changes
+      id: check_rally_link
+      run: |
+        # Check if the xyz.properties file is part of the changes in the latest commit
+        if git diff --name-only HEAD^ HEAD | grep -q 'xyz.properties'; then
+          # Get the rallyLink property value from the latest commit
+          rally_link_new=$(grep "^rallyLink=" xyz.properties | cut -d'=' -f2)
+          
+          # Get the rallyLink property value from the previous commit
+          rally_link_old=$(git show HEAD^:xyz.properties | grep "^rallyLink=" | cut -d'=' -f2)
+
+          # Check if the rallyLink property has changed
+          if [ "$rally_link_old" != "$rally_link_new" ]; then
+            echo "::set-output name=changed::true"
+            echo "::set-output name=rally_link_old::$rally_link_old"
+            echo "::set-output name=rally_link_new::$rally_link_new"
+          else
+            echo "::set-output name=changed::false"
+          fi
+        else
+          echo "::set-output name=changed::false"
+        fi
+
+    - name: Comment on GitHub issue
+      if: steps.check_rally_link.outputs.changed == 'true'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        issue_number=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+          -H "Accept: application/vnd.github.v3+json" \
+          "https://api.github.com/repos/temp-repo/issues?labels=xyz&state=open&per_page=1" | jq '.[0].number')
+        
+        if [ "$issue_number" != "null" ]; then
+          curl -s -H "Authorization: token $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            --request POST \
+            --data "{\"body\":\"The rallyLink property in xyz.properties has changed from ${{ steps.check_rally_link.outputs.rally_link_old }} to ${{ steps.check_rally_link.outputs.rally_link_new }}.\"}" \
+            "https://api.github.com/repos/temp-repo/issues/$issue_number/comments"
+        else
+          echo "No issue found with the label 'xyz'."
+        fi
