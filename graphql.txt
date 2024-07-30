@@ -64,3 +64,77 @@ jobs:
 
           # Print the results
           echo -e "$RESULTS"
+
+
+To modify the GitHub Action to print only the repository names (without the organization name) and include pull requests with the specific label, you can adjust the script to extract and format the repository names and their pull requests accordingly. Here’s how you can update the workflow:
+
+1. **Update the GitHub Action workflow file** (e.g., `.github/workflows/rest-api-query.yml`):
+
+```yaml
+name: Search Pull Requests
+
+on:
+  workflow_dispatch:
+    inputs:
+      repo_pattern:
+        description: 'Repository name pattern'
+        required: true
+        default: '*1234*'
+      label:
+        description: 'Label name'
+        required: true
+        default: 'chg1234'
+
+jobs:
+  query:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Search Repositories
+        id: search_repos
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          REPO_PATTERN="${{ github.event.inputs.repo_pattern }}"
+          LABEL="${{ github.event.inputs.label }}"
+          TOKEN="${{ secrets.GITHUB_TOKEN }}"
+
+          # Search for repositories
+          REPOS=$(curl -s -H "Authorization: Bearer $TOKEN" \
+                      -H "Accept: application/vnd.github.v3+json" \
+                      "https://api.github.com/search/repositories?q=${REPO_PATTERN}")
+
+          # Extract repository names
+          REPO_NAMES=$(echo "$REPOS" | jq -r '.items[].name')
+
+          # Initialize results array
+          RESULTS=""
+
+          for REPO in $REPO_NAMES; do
+            # Search for pull requests with the label in each repository
+            PRS=$(curl -s -H "Authorization: Bearer $TOKEN" \
+                        -H "Accept: application/vnd.github.v3+json" \
+                        "https://api.github.com/repos/$ORG/$REPO/issues?state=open&labels=$LABEL")
+
+            # Check if PRs were found
+            if [ "$(echo "$PRS" | jq -r '. | length')" -gt 0 ]; then
+              RESULTS+="$REPO\n"
+            fi
+          done
+
+          # Print the results
+          echo -e "$RESULTS"
+```
+
+**Explanation**:
+- **Search Repositories**: The script queries GitHub’s REST API to find repositories matching the given pattern.
+- **Extract Repository Names**: It retrieves only the repository names (`.items[].name`) from the response. This excludes the organization name from the results.
+- **Search Pull Requests**: For each repository, it searches for open pull requests with the specified label.
+- **Print Repository Names**: If pull requests with the specified label are found, it adds the repository name to the results.
+
+**Steps to use**:
+1. Ensure you have a GitHub secret named `GITHUB_TOKEN` with the necessary permissions.
+2. Commit the updated workflow file to your repository.
+3. Trigger the workflow manually from the Actions tab, providing `repo_pattern` and `label` inputs.
+
+This setup prints only the repository names where pull requests with the specified label are found, excluding the organization name.
