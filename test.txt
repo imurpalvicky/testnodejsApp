@@ -1,4 +1,4 @@
-I'mI'mI'm#!/bin/bash
+youI'mI'mI'm#!/bin/bash
 
 import os
 import base64
@@ -493,3 +493,48 @@ jobs:
                           https://api.github.com/graphql)
 
           echo "$RESPONSE" | jq .
+
+
+
+name: Create Issue with Dynamic Body
+
+on:
+  workflow_dispatch:
+    inputs:
+      value:
+        description: 'Value to determine the issue body content'
+        required: true
+        default: 'default'
+
+jobs:
+  create_issue:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Create Issue
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const value = "${{ github.event.inputs.value }}";
+
+            let body;
+            if (value === 'option1') {
+              body = 'This is the body text for option 1';
+            } else if (value === 'option2') {
+              body = 'This is the body text for option 2';
+            } else {
+              body = 'This is the default body text';
+            }
+
+            const response = await github.issues.create({
+              owner: 'your-organization',
+              repo: 'your-repository',
+              title: 'Issue created by GitHub Action',
+              body: body
+            });
+
+            core.setOutput('issue-url', response.data.html_url);
