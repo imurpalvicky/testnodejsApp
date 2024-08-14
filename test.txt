@@ -1,3 +1,5 @@
+escaped_json_payload=$(echo "$json_payload" | sed -e ':a' -e 'N;$!ba' -e 's/\n/\\n/g' -e 's/\r/\\r/g')
+
 youI'mI'mI'm#!/bin/bash
 
 import os
