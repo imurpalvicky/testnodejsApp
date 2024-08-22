@@ -14,8 +14,17 @@ query($searchQuery: String!) {
           id
           body
           state
-          closedBy {
-            login
+          timelineItems(first: 10, itemTypes: [CLOSED_EVENT]) {
+            edges {
+              node {
+                ... on ClosedEvent {
+                  actor {
+                    login
+                  }
+                  createdAt
+                }
+              }
+            }
           }
           comments(first: 10) {
             edges {
@@ -58,12 +67,19 @@ def extract_issue_data(issue_node):
             "createdAt": comment_node['createdAt']
         })
     
+    # Extract closedBy information if available
+    closed_by = None
+    if issue_node['state'] == "CLOSED":
+        closed_event = next((item for item in issue_node['timelineItems']['edges'] if 'actor' in item['node']), None)
+        if closed_event:
+            closed_by = closed_event['node']['actor']['login']
+    
     # Build issue object
     issue_data = {
         "issue_id": issue_node['id'],
         "issue_body": issue_node['body'],
         "issue_status": issue_node['state'],
-        "closed_by": issue_node['closedBy']['login'] if issue_node['closedBy'] else None,
+        "closed_by": closed_by,
         "comments": comments
     }
     
