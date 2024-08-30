@@ -1,3 +1,13 @@
+placeholder_value="This (is) a [test] string with *special* characters: ^, $, ., |, +, ?, &, /, \ and {}"
+
+# Escape all necessary special characters
+escaped_value=$(printf '%s\n' "$placeholder_value" | sed -e 's/[\/&(){}\[\].*+?^$|\\]/\\&/g')
+
+# Use in sed replacement
+sed -e "s/{{PLACEHOLDER}}/$escaped_value/g" input.xml > output.xml
+
+
+
 escaped_json_payload=$(echo "$json_payload" | sed -e ':a' -e 'N;$!ba' -e 's/\n/\\n/g' -e 's/\r/\\r/g')
 
 youI'mI'mI'm#!/bin/bash
