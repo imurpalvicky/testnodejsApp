@@ -1,0 +1,47 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "apigateway:GET",
+                "apigateway:POST",
+                "apigateway:PUT",
+                "apigateway:DELETE",
+                "apigateway:PATCH"
+            ],
+            "Resource": [
+                "arn:aws:apigateway:<region>::/restapis/*",
+                "arn:aws:apigateway:<region>::/apis/*",
+                "arn:aws:apigateway:<region>::/apikeys/*",
+                "arn:aws:apigateway:<region>::/usageplans/*",
+                "arn:aws:apigateway:<region>::/usageplankeys/*",
+                "arn:aws:apigateway:<region>::/deployments/*",
+                "arn:aws:apigateway:<region>::/stages/*",
+                "arn:aws:apigateway:<region>::/domainnames/*",
+                "arn:aws:apigateway:<region>::/authorizers/*",
+                "arn:aws:apigateway:<region>::/integrations/*",
+                "arn:aws:apigateway:<region>::/resources/*",
+                "arn:aws:apigateway:<region>::/methods/*",
+                "arn:aws:apigateway:<region>::/models/*",
+                "arn:aws:apigateway:<region>::/responses/*",
+                "arn:aws:apigateway:<region>::/vpclinks/*",
+                "arn:aws:apigateway:<region>::/clientcertificates/*",
+                "arn:aws:apigateway:<region>::/documentationparts/*",
+                "arn:aws:apigateway:<region>::/documentationversions/*",
+                "arn:aws:apigateway:<region>::/requestvalidators/*",
+                "arn:aws:apigateway:<region>::/tags/*",
+                "arn:aws:apigateway:<region>::/gatewayresponses/*",
+                "arn:aws:apigateway:<region>::/restapis/*/deployments/*",
+                "arn:aws:apigateway:<region>::/restapis/*/stages/*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": "logs:*",
+            "Resource": [
+                "arn:aws:logs:<region>:<account-id>:log-group:/aws/apigateway/*"
+            ]
+        }
+    ]
+}
