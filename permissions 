@@ -8,6 +8,54 @@
                 "apigateway:POST",
                 "apigateway:PUT",
                 "apigateway:DELETE",
+                "apigateway:PATCH",
+                "apigateway:UpdateRestApiPolicy",
+                "apigateway:CreateDomainName",
+                "apigateway:DeleteDomainName",
+                "apigateway:UpdateDomainName"
+            ],
+            "Resource": "*",
+            "Condition": {
+                "StringLike": {
+                    "apigateway:ResourcePath": "/restapis/aig-gi*"
+                }
+            }
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "wafv2:AssociateWebACL",
+                "wafv2:DisassociateWebACL",
+                "wafv2:GetWebACL",
+                "wafv2:ListWebACLs",
+                "wafv2:UpdateWebACL"
+            ],
+            "Resource": "arn:aws:wafv2:<region>:<account-id>:*/webacl/*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": "logs:*",
+            "Resource": [
+                "arn:aws:logs:<region>:<account-id>:log-group:/aws/apigateway/*"
+            ]
+        }
+    ]
+}
+
+
+
+
+
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "apigateway:GET",
+                "apigateway:POST",
+                "apigateway:PUT",
+                "apigateway:DELETE",
                 "apigateway:PATCH"
             ],
             "Resource": [
