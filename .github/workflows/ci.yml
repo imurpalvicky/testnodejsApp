@@ -2,39 +2,35 @@ name: buildworkflow
 on: pull_request
 jobs:
   build:
-    runs-on: "self-hosted"
+    runs-on: "ubuntu"
     strategy:
       matrix:
         node-version: [14.x]
     steps:
       - name: "checkout"
         uses: actions/checkout@v2
-      - name: Set up Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2
+#      - name: Set up Node.js ${{ matrix.node-version }}
+#        uses: actions/setup-node@v2
+#        with:
+#          node-version: ${{ matrix.node-version }} 
+#      - name: Install dependencies
+#        run: npm install
+#      - name: sample curl call
+#        run: |
+#          curl https://meowfacts.herokuapp.com/ | jq '.data[0]'
+#        id: samplecurl
+#      - name: Set the value
+#        id: step_one
+#        run: |
+#          echo "test=$(curl https://meowfacts.herokuapp.com/ | jq '.data[0]' )" >> $GITHUB_ENV
+#      - name: Use the value
+#        id: step_two
+#        run: |
+#          echo "$test" # This will output 'yellow'
+    
+      - name: create an issue
+        uses: dacbd/create-issue-action@main
         with:
-          node-version: ${{ matrix.node-version }}
-      - name: Install dependencies
-        run: npm install
-      - name: Run trufflhog
-        run: | 
-          C:\Users\sanka\AppData\Roaming\Python\Python310\site-packages\truffleHog\truffleHog.py --json --regex --entropy=False  https://imurpalvicky:${{secrets.GIT_SECRET_TOKEN}}@github.com/imurpalvicky/testnodejsApp
-        id: trufflerun
-      - name: ReadTrufflerunFile
-        id: setTruffleOutput
-        run: |
-          echo testingecho
-          Get-Content output.json -Raw 
-          $content = Get-Content output.json -Raw 
-          echo this is the $content
-          # end of optional handling for multi line json
-          echo "::set-output name=trufflescanresult::$content"
-        shell: powershell
-      - name: create checks
-        uses: LouisBrunner/checks-action@v1.1.1
-        if: always()
-        with:
-          token: ${{ secrets.GIT_SECRET_TOKEN }}
-          name: Test XYZ
-          conclusion: ${{ job.status }}
-          output: |
-            {"summary":${{ steps.ReadTrufflerunFile.outputs.trufflescanresult }}}
+          token: ${{ github.token }}
+          title: Simple test issue
+          body: my new issue         
