@@ -190,12 +190,121 @@ The agent produces **two artifacts**, not one:
 
 1. **The fix** — a PR against a remediation branch cut from the deployed release tag (not
    from `main`), carrying the child ID in the commit trailer.
-2. **The proof test** — a test asserting the violated invariant, written against the *class*
-   of bad input rather than one literal case.
+2. **The proof test** — see below. This is the artifact the whole design's determinism rests
+   on.
 
-The proof test **must fail against the pre-fix commit**. A test written after the fix proves
-nothing: you cannot tell whether it is green because the defect is gone or because it never
-captured the defect.
+#### When a proof test is required
+
+**The rule is not "AI-identified." It is: wherever no deterministic re-scan exists.**
+
+| Finding source | Closure proved by | Proof test |
+|---|---|---|
+| Dependency CVE / SCA | Version comparison, re-scan | **No** — pure waste |
+| SAST | Re-scan; same rule, same code, same verdict | **No** (see upgrade case) |
+| Image / infrastructure | Re-scan of the artifact | **No** |
+| AI-discovered | Nothing — the finder is non-deterministic | **Yes** |
+| Pen test / bug bounty | Nothing — no scanner encodes a rule for it | **Yes** |
+| First-party business logic | Nothing — no rule captures it | **Yes** |
+
+The pen-test and bounty row matters and is easy to miss: a human found it, nothing will ever
+re-detect it, and it is architecturally identical to the AI case.
+
+**Upgrade case.** For high-severity SAST findings it can be worth writing a proof test
+anyway — it gives permanent regression protection and defeats the failure mode where a
+developer restructures code until the rule stops firing without fixing the defect. Judgement
+per finding, never a blanket policy.
+
+**Sizing consequence.** Harness investment scales to the non-rescannable subset, not to total
+finding volume — and that subset is far smaller. Most dependency-CVE traffic never touches
+this path.
+
+#### What a proof test is
+
+A test asserting the **invariant the defect violates** — "the parser rejects a malformed
+length header" — rather than reproducing the exploit that abused it. Written against the
+*class* of bad input, never the single case the finding happened to use, or it can be
+satisfied without a real fix.
+
+**The two-run rule.** The pipeline runs it twice and both results are mandatory:
+
+| Run | Against | Required result |
+|---|---|---|
+| 1 | The pre-fix commit (parent SHA) | **Fail** |
+| 2 | The fix commit | **Pass** |
+
+A test that passes against both never captured the defect, and would have certified a fix
+that fixed nothing. Skipping run 1 is the single easiest way to make this entire design
+worthless while every dashboard stays green.
+
+#### Why harnesses are needed
+
+Take a concrete finding: *an endpoint does not verify the caller owns the record, so any
+authenticated user can read anyone's data.* Proving it requires the test to:
+
+1. Start the service
+2. Create two users
+3. Create a record owned by the first
+4. Authenticate as the second
+5. Request the first user's record
+6. Assert denial
+
+Only steps 3, 5 and 6 are about this finding. **Steps 1, 2 and 4 are identical for every
+authorization finding in every service of that runtime** — and they are where all the effort
+goes. Without shared scaffolding, whoever writes the first proof test must work out how the
+service starts under test, which framework it uses, how to mint a token, how to seed data and
+how to tear down. That is most of a day per finding, and longer in an unfamiliar service.
+
+**A harness packages steps 1, 2 and 4** so the proof test contains only the finding:
+
+```java
+var alice = actor("alice");
+var bob   = actor("bob");
+var order = alice.creates("/api/orders", ...);
+
+var response = bob.get("/api/orders/" + order.id());
+
+assertDenied(response);          // never 200 carrying Alice's data
+```
+
+Eight lines, roughly twenty minutes. If you have used Testcontainers, this is the same idea
+one level up: Testcontainers provides "a real database in my test," a proof-test harness
+provides "a running instance of this service with two authenticated identities."
+
+#### How many, and of what kind
+
+Driven by **attack surface × runtime**, not by language count, because the mechanics of
+driving input and detecting misbehaviour differ fundamentally:
+
+| Surface | Needs | Assertion mechanism |
+|---|---|---|
+| HTTP service | Service running, auth, request helpers | Response check |
+| In-process library | Nothing but the function call | Return value or exception |
+| Message consumer | Broker or in-memory equivalent | Consumer behaviour |
+| Native memory safety | Build with ASan / UBSan | **The sanitizer tripping is the failure** — no assert statement |
+| Container runtime | The built image | Image inspection |
+| File / batch input | Malformed fixture files | Rejection behaviour |
+
+Six to ten covers the overwhelming majority of a typical estate; the long tail is handled
+bespoke. Note that in-process library harnesses are the simplest to build and tend to catch
+a large share of AI-discovered findings.
+
+#### Operating model
+
+| Who | Does what | Frequency |
+|---|---|---|
+| Platform + central security | Build the harnesses | **Once**, like a shared CI library |
+| Central security engineer | Writes the proof test per finding | Minutes, because the harness exists |
+| Application team | Makes the test pass | Never touches the harness |
+
+**Where things live.** The harness is published as a versioned test dependency — a JAR, pip
+or npm package — that repositories consume. The proof test itself is committed into the
+repository's normal test tree, so it runs on every build thereafter as permanent regression
+protection.
+
+This is what makes the investment compound: build ten harnesses once, and every subsequent
+finding converts into a permanent deterministic test at near-zero marginal cost. Without
+them each finding carries a day of scaffolding, which at campaign volume is the difference
+between the design working and the arithmetic not closing.
 
 Alternative outcome:
 
@@ -223,16 +332,20 @@ remediation pipelines too slow to use.
 |---|---|---|---|
 | Secret detection | Diff | 10s | Block |
 | Build | Component | 2m | Block |
-| Proof test — pre-fix commit | The finding | 30s | **Must fail** |
-| Proof test — fix commit | The finding | 30s | **Must pass** |
+| Proof test — pre-fix commit | The finding | 30s | **Must fail** * |
+| Proof test — fix commit | The finding | 30s | **Must pass** * |
 | SAST delta | Changed files only | 90s | Block on new |
 | SCA | Changed dependencies | 40s | Block on new |
 | Static quality | Branch analysis on diff | 60s | Block on new |
 | Impacted tests | Selected by impact analysis | 2m | Block |
 | Diff scope | Size and file spread | 1s | Warn / hard ceiling |
 
-**Both proof-test runs are required.** Skipping the pre-fix run would certify a fix that
-fixed nothing.
+\* **Proof-test rows apply only to non-rescannable findings** (see Stage 3). For scanner-owned
+findings the SAST or SCA delta row *is* the closure proof, and no proof test is built. The
+pipeline selects which mechanism applies from the finding source recorded against the child ID.
+
+**Where a proof test does apply, both runs are required.** Skipping the pre-fix run would
+certify a fix that fixed nothing.
 
 Deltas compare against the **branch point**, never an absolute policy threshold — otherwise
 inherited debt blocks an unrelated fix.
@@ -321,7 +434,7 @@ Ordered by lead time, not effort.
 | Elastic CI | Absorbs campaign bursts; static agent pools cap the programme | Gap |
 | On-demand environments | Removes environment booking from the critical path | Gap — per app |
 | Test impact selection | Keeps pipelines inside budget as volume rises | Gap |
-| Proof-test harnesses | A small set per runtime, built once, reused across the estate | Gap |
+| Proof-test harnesses | 6–10 by attack surface × runtime. Without them every finding costs a day of scaffolding and validation becomes slower than the fix | Gap |
 | AI remediation agent | Generates the fix and the proof test | Evaluating |
 
 ---
