@@ -1,0 +1,24 @@
+name: Environment Workflow
+
+on:
+  workflow_dispatch:
+
+env:
+  WORKFLOW_VARIABLE: WORKFLOW
+
+jobs:
+
+  job1:
+    runs-on: ubuntu-latest
+    env:
+      JOB_VARIABLE: JOB
+    steps:
+      - name: Run Commands with various variables
+        if: ${{ env.WORKFLOW_VARIABLE == 'WORKFLOW' }}
+        env:
+          STEP_VARIABLE: STEP
+        run: |
+          echo "Hello World"
+          echo "This is the $WORKFLOW_VARIABLE environment variable"
+          echo "This is the $JOB_VARIABLE environment variable"
+          echo "This is the $STEP_VARIABLE environment variable"
